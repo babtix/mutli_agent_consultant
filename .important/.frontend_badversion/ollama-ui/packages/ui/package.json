@@ -1,0 +1,16 @@
+{
+  "name": "@workspace/ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./globals.css": "./src/styles/globals.css",
+    "./lib/utils": "./src/lib/utils.js",
+    "./components/*": "./src/components/*.jsx"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.1"
+  }
+}
