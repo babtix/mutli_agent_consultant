@@ -26,6 +26,7 @@ async def create_agent(
     name: str = Form(...),
     description: str = Form(...),
     model_name: Optional[str] = Form(settings.DEFAULT_MODEL_NAME),
+    provider: Optional[str] = Form(settings.DEFAULT_LLM_PROVIDER),
     prompt_file: UploadFile = File(..., description="Fichier Markdown .md avec le system prompt"),
     logo_file: Optional[UploadFile] = File(None, description="Image du logo de l'agent"),
     current_user: dict = Depends(get_current_admin_user)
@@ -52,6 +53,7 @@ async def create_agent(
         "description": description,
         "system_prompt": system_prompt,
         "model_name": model_name,
+        "provider": provider or settings.DEFAULT_LLM_PROVIDER,
         "logo_url": logo_url
     }
     
@@ -65,6 +67,7 @@ async def update_agent(
     name: str = Form(...),
     description: str = Form(...),
     model_name: Optional[str] = Form(settings.DEFAULT_MODEL_NAME),
+    provider: Optional[str] = Form(settings.DEFAULT_LLM_PROVIDER),
     prompt_file: Optional[UploadFile] = File(None, description="Nouvel optionnel .md avec le system prompt"),
     logo_file: Optional[UploadFile] = File(None, description="Nouvelle image du logo de l'agent"),
     current_user: dict = Depends(get_current_admin_user)
@@ -76,7 +79,8 @@ async def update_agent(
     update_data = {
         "name": name,
         "description": description,
-        "model_name": model_name
+        "model_name": model_name,
+        "provider": provider or settings.DEFAULT_LLM_PROVIDER
     }
     
     if prompt_file and prompt_file.filename.endswith(".md"):

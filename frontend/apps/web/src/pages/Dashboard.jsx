@@ -1,7 +1,7 @@
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../lib/api"
-import { MessageSquare, Bot, Sparkles, ArrowRight, Zap } from "lucide-react"
+import { MessageSquare, Bot, Sparkles, ArrowRight, Zap, Cloud, Server } from "lucide-react"
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -75,9 +75,22 @@ export default function Dashboard() {
                   </p>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground/60 bg-muted/50 px-2 py-1 rounded-md">
-                      {agent.model_name}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground/60 bg-muted/50 px-2 py-1 rounded-md">
+                        {agent.model_name}
+                      </span>
+                      {agent.provider === "openrouter" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-chart-2/10 text-chart-2 font-medium">
+                          <Cloud className="w-2.5 h-2.5" />
+                          Cloud
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          <Server className="w-2.5 h-2.5" />
+                          Local
+                        </span>
+                      )}
+                    </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>

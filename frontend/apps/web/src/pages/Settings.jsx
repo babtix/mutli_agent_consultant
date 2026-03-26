@@ -21,6 +21,7 @@ import {
   Filter,
   ChevronDown,
   RefreshCw,
+  Globe,
 } from "lucide-react"
 
 const TABS = [
@@ -428,7 +429,20 @@ function AgentSettings() {
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-sm">{agent.name}</h3>
               <p className="text-xs text-muted-foreground truncate">{agent.description}</p>
-              <p className="text-xs text-muted-foreground/50 mt-0.5">{agent.model_name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-muted-foreground/50">{agent.model_name}</span>
+                {agent.provider === "openrouter" ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-chart-2/10 text-chart-2 font-medium">
+                    <Cloud className="w-2.5 h-2.5" />
+                    Cloud
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                    <Server className="w-2.5 h-2.5" />
+                    Local
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -474,6 +488,7 @@ function AgentForm({ agent, onClose, onSaved }) {
   const [name, setName] = useState(agent?.name || "")
   const [description, setDescription] = useState(agent?.description || "")
   const [modelName, setModelName] = useState(agent?.model_name || "")
+  const [provider, setProvider] = useState(agent?.provider || "ollama")
   const [promptFile, setPromptFile] = useState(null)
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -488,6 +503,7 @@ function AgentForm({ agent, onClose, onSaved }) {
     formData.append("name", name)
     formData.append("description", description)
     formData.append("model_name", modelName)
+    formData.append("provider", provider)
 
     if (promptFile) {
       formData.append("prompt_file", promptFile)
@@ -562,11 +578,41 @@ function AgentForm({ agent, onClose, onSaved }) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Modèle Ollama</label>
+            <label className="text-sm font-medium">Modèle</label>
             <ModelSelector
               value={modelName}
               onChange={(name) => setModelName(name)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Fournisseur</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setProvider("ollama")}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                  provider === "ollama"
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-card border-border text-muted-foreground hover:border-primary/20"
+                }`}
+              >
+                <Server className="w-4 h-4" />
+                Ollama (Local)
+              </button>
+              <button
+                type="button"
+                onClick={() => setProvider("openrouter")}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                  provider === "openrouter"
+                    ? "bg-chart-2/10 border-chart-2/30 text-chart-2"
+                    : "bg-card border-border text-muted-foreground hover:border-chart-2/20"
+                }`}
+              >
+                <Globe className="w-4 h-4" />
+                OpenRouter (Cloud)
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

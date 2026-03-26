@@ -92,7 +92,7 @@ export default function AppLayout() {
         agent_id: agentId,
       })
       await fetchConversations()
-      navigate(`/chat/${res.data._id}`)
+      navigate(`/dashboard/chat/${res.data._id}`)
       setMobileSidebarOpen(false)
       toast.success(`Nouvelle conversation avec ${agent?.name || "Agent"}`)
     } catch (err) {
@@ -252,7 +252,7 @@ export default function AppLayout() {
               </p>
               <div className="space-y-0.5">
                 {group.items.map((conv) => {
-                  const isActive = location.pathname === `/chat/${conv._id}`
+                  const isActive = location.pathname === `/dashboard/chat/${conv._id}`
                   return (
                     <div
                       key={conv._id}
@@ -277,7 +277,7 @@ export default function AppLayout() {
                         </form>
                       ) : (
                         <Link
-                          to={`/chat/${conv._id}`}
+                          to={`/dashboard/chat/${conv._id}`}
                           onClick={() => setMobileSidebarOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 text-sm w-full truncate"
                         >
@@ -326,20 +326,20 @@ export default function AppLayout() {
       {/* Bottom Nav */}
       <div className="p-3 border-t border-border/50 space-y-1">
         <Link
-          to="/"
+          to="/dashboard"
           onClick={() => setMobileSidebarOpen(false)}
           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-            location.pathname === "/" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            location.pathname === "/dashboard" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           }`}
         >
           <Home className="w-4 h-4" />
           Accueil
         </Link>
         <Link
-          to="/conversations"
+          to="/dashboard/conversations"
           onClick={() => setMobileSidebarOpen(false)}
           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-            location.pathname === "/conversations" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            location.pathname === "/dashboard/conversations" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           }`}
         >
           <Clock className="w-4 h-4" />
@@ -347,10 +347,10 @@ export default function AppLayout() {
         </Link>
         {isAdmin && (
           <Link
-            to="/settings"
+            to="/dashboard/settings"
             onClick={() => setMobileSidebarOpen(false)}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-              location.pathname === "/settings" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              location.pathname === "/dashboard/settings" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
             }`}
           >
             <Settings className="w-4 h-4" />
@@ -358,10 +358,10 @@ export default function AppLayout() {
           </Link>
         )}
         <Link
-          to="/account"
+          to="/dashboard/account"
           onClick={() => setMobileSidebarOpen(false)}
           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-            location.pathname === "/account" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+            location.pathname === "/dashboard/account" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           }`}
         >
           <UserCircle className="w-4 h-4" />

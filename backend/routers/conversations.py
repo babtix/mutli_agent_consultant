@@ -18,6 +18,27 @@ class ChatRequest(BaseModel):
 class ConversationRename(BaseModel):
     title: str
 
+@router.get("/search/", response_model=List[ConversationResponse])
+async def search_conversations(
+    q: str = Query("", min_length=1, description="Search query"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: dict = Depends(get_current_user)
+):
+    """Search conversations by title or message content"""
+    filter_query = {
+        "user_id": current_user["_id"],
+        "$or": [
+            {"title": {"$regex": q, "$options": "i"}},
+            {"messages.content": {"$regex": q, "$options": "i"}},
+        ]
+    }
+    conversations = await conversations_collection.find(filter_query)\
+        .sort("updated_at", -1).skip(skip).limit(limit).to_list(limit)
+    for conv in conversations:
+        conv["_id"] = str(conv["_id"])
+    return conversations
+
 @router.post("/", response_model=ConversationResponse)
 async def create_conversation(conv_in: ConversationCreate, current_user: dict = Depends(get_current_user)):
     agent = await agents_collection.find_one({"_id": ObjectId(conv_in.agent_id)})

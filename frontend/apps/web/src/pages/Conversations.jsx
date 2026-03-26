@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../lib/api"
+import { toast } from "sonner"
+import ConfirmDialog from "../components/ConfirmDialog"
 import {
   MessageSquare,
   Search,
@@ -8,17 +10,49 @@ import {
   Clock,
   Bot,
   ArrowRight,
+  Loader2,
+  X,
 } from "lucide-react"
 
 export default function Conversations() {
   const navigate = useNavigate()
   const { conversations, fetchConversations, agents } = useOutletContext()
   const [search, setSearch] = useState("")
-  const [deleting, setDeleting] = useState(null)
+  const [searchResults, setSearchResults] = useState(null)
+  const [searching, setSearching] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null })
+  const searchTimeoutRef = useRef(null)
 
-  const filtered = conversations.filter((conv) =>
-    conv.title.toLowerCase().includes(search.toLowerCase())
-  )
+  // Debounced server-side search
+  useEffect(() => {
+    if (!search.trim()) {
+      setSearchResults(null)
+      return
+    }
+
+    setSearching(true)
+    clearTimeout(searchTimeoutRef.current)
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/conversations/search/?q=${encodeURIComponent(search.trim())}`)
+        setSearchResults(res.data)
+      } catch (err) {
+        console.error("Search failed:", err)
+        // Fallback to client-side filter
+        setSearchResults(
+          conversations.filter((c) =>
+            c.title.toLowerCase().includes(search.toLowerCase())
+          )
+        )
+      } finally {
+        setSearching(false)
+      }
+    }, 350)
+
+    return () => clearTimeout(searchTimeoutRef.current)
+  }, [search])
+
+  const displayList = searchResults !== null ? searchResults : conversations
 
   function getAgentName(agentId) {
     const agent = agents.find((a) => a._id === agentId)
@@ -45,16 +79,20 @@ export default function Conversations() {
     return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
   }
 
-  async function handleDelete(e, convId) {
-    e.stopPropagation()
-    setDeleting(convId)
+  async function handleDelete() {
+    const convId = deleteConfirm.id
+    setDeleteConfirm({ open: false, id: null })
     try {
       await api.delete(`/conversations/${convId}`)
       await fetchConversations()
+      // Also clear from search results
+      if (searchResults) {
+        setSearchResults((prev) => prev.filter((c) => c._id !== convId))
+      }
+      toast.success("Conversation supprimée")
     } catch (err) {
       console.error("Failed to delete:", err)
-    } finally {
-      setDeleting(null)
+      toast.error("Impossible de supprimer la conversation")
     }
   }
 
@@ -75,14 +113,34 @@ export default function Conversations() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher une conversation..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+            placeholder="Rechercher dans les titres et messages..."
+            className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+          {searching && (
+            <div className="absolute right-10 top-1/2 -translate-y-1/2">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+            </div>
+          )}
         </div>
+
+        {/* Search result count */}
+        {searchResults !== null && (
+          <p className="text-xs text-muted-foreground mb-4 animate-fade-in">
+            {searchResults.length} résultat{searchResults.length !== 1 ? "s" : ""} pour "{search}"
+          </p>
+        )}
 
         {/* Conversations list */}
         <div className="space-y-2">
-          {filtered.map((conv, i) => {
+          {displayList.map((conv, i) => {
             const logo = getAgentLogo(conv.agent_id)
             return (
               <button
@@ -124,8 +182,10 @@ export default function Conversations() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={(e) => handleDelete(e, conv._id)}
-                    disabled={deleting === conv._id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDeleteConfirm({ open: true, id: conv._id })
+                    }}
                     className="p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -138,10 +198,16 @@ export default function Conversations() {
         </div>
 
         {/* Empty states */}
-        {filtered.length === 0 && conversations.length > 0 && (
+        {displayList.length === 0 && searchResults !== null && (
           <div className="text-center py-12">
             <Search className="w-8 h-8 mx-auto text-muted-foreground/20 mb-3" />
             <p className="text-muted-foreground text-sm">Aucun résultat pour "{search}"</p>
+            <button
+              onClick={() => setSearch("")}
+              className="text-primary text-sm mt-2 hover:underline"
+            >
+              Effacer la recherche
+            </button>
           </div>
         )}
 
@@ -155,6 +221,17 @@ export default function Conversations() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        title="Supprimer la conversation"
+        message="Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+        destructive
+      />
     </div>
   )
 }

@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useOutletContext } from "react-router-dom"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import { toast } from "sonner"
 import api, { API_BASE_URL } from "../lib/api"
+import MarkdownRenderer from "../components/MarkdownRenderer"
 import {
   Send,
   Paperclip,
   Download,
+  Cloud,
+  Server,
   FileText,
   File,
   StopCircle,
@@ -290,7 +291,12 @@ export default function Chat() {
           </div>
           <div>
             <h2 className="font-semibold text-sm">{conversation?.title}</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              {agent?.provider === "openrouter" ? (
+                <Cloud className="w-3 h-3 text-chart-2" />
+              ) : (
+                <Server className="w-3 h-3 text-primary" />
+              )}
               {agent?.name || "Agent"} · {agent?.model_name || ""}
             </p>
           </div>
@@ -369,9 +375,7 @@ export default function Chat() {
                 <Bot className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamingText}</ReactMarkdown>
-                </div>
+                <MarkdownRenderer content={streamingText} />
                 <div className="flex items-center gap-1 mt-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   <span className="text-xs text-muted-foreground">En cours de génération...</span>
@@ -523,9 +527,7 @@ function MessageBubble({ message, index, agent, copiedId, onCopy }) {
           {isUser ? (
             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
-            </div>
+            <MarkdownRenderer content={message.content} />
           )}
         </div>
 
